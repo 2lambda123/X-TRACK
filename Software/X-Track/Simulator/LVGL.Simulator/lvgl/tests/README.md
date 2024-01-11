@@ -21,9 +21,9 @@ scripts/install-prerequisites.sh
 
 For full information on running tests run: `./tests/main.py --help`.
 
-## Running automatically
+## Running Tests Locally and Automatically
 
-GitHub's CI automatically runs these tests on pushes and pull requests to `master` and `releasev8.*` branches.
+GitHub CI automatically runs these tests on pushes and pull requests to specific branches and on every pull request.
 
 ## Directory structure
 - `src` Source files of the tests
