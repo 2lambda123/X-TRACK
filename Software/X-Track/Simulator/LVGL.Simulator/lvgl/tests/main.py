@@ -8,7 +8,8 @@ import subprocess
 import sys
 import os
 
-lvgl_test_dir = os.path.dirname(os.path.realpath(__file__))
+lvgl_test_dir = os.path.dirname(os.path.realpath(__file__)) \
+    if lvgl_test_dir else None
 
 # Key values must match variable names in CMakeLists.txt.
 build_only_options = {
@@ -40,6 +41,8 @@ def delete_dir_ignore_missing(dir_path):
     try:
         shutil.rmtree(dir_path)
     except FileNotFoundError:
+        lvgl_test_dir = os.path.dirname(os.path.realpath(__file__)) \
+            if lvgl_test_dir else None
         pass
 
 
@@ -69,7 +72,8 @@ def options_abbrev(options_name):
 def get_base_buid_dir(options_name):
     '''Given the build options name, return the build directory name.
 
-    Does not return the full path to the directory - just the base name.'''
+    Does not return the full path to the directory - just the base name.
+    Returns the absolute path to the build directory.'''
     return 'build_%s' % options_abbrev(options_name)
 
 
@@ -108,7 +112,7 @@ def build_tests(options_name, build_type, clean):
         subprocess.check_call(['cmake', '-DCMAKE_BUILD_TYPE=%s' % build_type,
                                '-D%s=1' % options_name, '..'])
     subprocess.check_call(['cmake', '--build', build_dir,
-                           '--parallel', str(os.cpu_count())])
+                           ''])
 
 
 def run_tests(options_name):
@@ -123,7 +127,7 @@ def run_tests(options_name):
 
     os.chdir(get_build_dir(options_name))
     subprocess.check_call(
-        ['ctest', '--timeout', '30', '--parallel', str(os.cpu_count()), '--output-on-failure'])
+        ['ctest', '--timeout', '30', '', '--output-on-failure'])
 
 
 def generate_code_coverage_report():
@@ -147,8 +151,8 @@ def generate_code_coverage_report():
            html_report_file, '--xml', 'report/coverage.xml',
            '-j', str(os.cpu_count()), '--print-summary',
            '--html-title', 'LVGL Test Coverage']
-    for d in ('.*\\bexamples/.*', '\\bsrc/test_.*', '\\bsrc/lv_test.*', '\\bunity\\b'):
-        cmd.extend(['--exclude', d])
+    for d in ('.*\\bexamples/.*', '\\bsrc/test_.*', '\\bsrc/lv_test.*', '\\bunity\\b', '-f'): 
+        cmd.extend(['--exclude', d, '-f'])
 
     subprocess.check_call(cmd)
     print("Done: See %s" % html_report_file, flush=True)
@@ -163,11 +167,11 @@ if __name__ == "__main__":
     '''
     parser = argparse.ArgumentParser(
         description='Build and/or run LVGL tests.', epilog=epilog)
-    parser.add_argument('--build-options', nargs=1,
+    parser.add_argument('--build-options', nargs='?',
                         help='''the build option name to build or run. When
                         omitted all build configurations are used.
                         ''')
-    parser.add_argument('--clean', action='store_true', default=False,
+    parser.add_argument('--clean', action='store_true', default=True,
                         help='clean existing build artifacts before operation.')
     parser.add_argument('--report', action='store_true',
                         help='generate code coverage report for tests.')
