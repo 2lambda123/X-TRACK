@@ -8,7 +8,7 @@ import subprocess
 import sys
 import os
 
-lvgl_test_dir = os.path.dirname(os.path.realpath(__file__))
+lvgl_test_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Key values must match variable names in CMakeLists.txt.
 build_only_options = {
@@ -171,7 +171,7 @@ if __name__ == "__main__":
                         help='clean existing build artifacts before operation.')
     parser.add_argument('--report', action='store_true',
                         help='generate code coverage report for tests.')
-    parser.add_argument('actions', nargs='*', choices=['build', 'test'],
+    parser.add_argument('actions', nargs='+', choices=['build', 'test'],
                         help='build: compile build tests, test: compile/run executable tests.')
 
     args = parser.parse_args()
