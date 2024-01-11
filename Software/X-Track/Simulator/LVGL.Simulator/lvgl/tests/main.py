@@ -39,7 +39,9 @@ def delete_dir_ignore_missing(dir_path):
     '''Recursively delete a directory and ignore if missing.'''
     try:
         shutil.rmtree(dir_path)
-    except FileNotFoundError:
+    except FileNotFoundError as e:
+        if e.errno != errno.ENOENT:
+            raise
         pass
 
 
@@ -48,7 +50,7 @@ def generate_test_runners():
     global lvgl_test_dir
     os.chdir(lvgl_test_dir)
     delete_dir_ignore_missing('src/test_runners')
-    os.mkdir('src/test_runners')
+    os.makedirs('src/test_runners', exist_ok=True)
 
     # TODO: Intermediate files should be in the build folders, not alongside
     #       the other repo source.
@@ -80,7 +82,6 @@ def get_build_dir(options_name):
     global lvgl_test_dir
     return os.path.join(lvgl_test_dir, get_base_buid_dir(options_name))
 
-
 def build_tests(options_name, build_type, clean):
     '''Build all tests for the specified options name.'''
     global lvgl_test_dir
@@ -101,7 +102,7 @@ def build_tests(options_name, build_type, clean):
     os.chdir(lvgl_test_dir)
     created_build_dir = False
     if not os.path.isdir(build_dir):
-        os.mkdir(build_dir)
+        os.makedirs(build_dir, exist_ok=True)
         created_build_dir = True
     os.chdir(build_dir)
     if created_build_dir:
@@ -124,7 +125,6 @@ def run_tests(options_name):
     os.chdir(get_build_dir(options_name))
     subprocess.check_call(
         ['ctest', '--timeout', '30', '--parallel', str(os.cpu_count()), '--output-on-failure'])
-
 
 def generate_code_coverage_report():
     '''Produce code coverage test reports for the test execution.'''
@@ -163,7 +163,7 @@ if __name__ == "__main__":
     '''
     parser = argparse.ArgumentParser(
         description='Build and/or run LVGL tests.', epilog=epilog)
-    parser.add_argument('--build-options', nargs=1,
+    parser.add_argument('--build-options', nargs='*', default=[],
                         help='''the build option name to build or run. When
                         omitted all build configurations are used.
                         ''')
